@@ -1,0 +1,32 @@
+install.packages("randomForest")
+library(randomForest)
+library(dplyr)
+library(MASS)
+set.seed(123)
+DataFrame<- birthwt
+summary(DataFrame)
+#converting the numerical data into the categorical data
+cols <- c("low", "race", "smoke", "ptl", "ht", "ui", "ftv" )
+for(i in cols){
+  DataFrame[,i] <- as.factor(DataFrame[,i])
+}
+str(DataFrame)
+#lets divide the data into training and test data set
+install.packages("caTools")
+library(caTools)
+ind <- sample.split(Y = DataFrame$low, SplitRatio = 0.7)
+trainDF <- DataFrame[ind,]
+testDF <- DataFrame[!ind,]
+#higher strength of tree implies less misclassification rAte
+#mtry and sam size
+modelRandom <- randomForest(low~. , data = trainDF, mtry = 3 , ntree= 20)
+modelRandom
+PredictionsWithClass <- predict(modelRandom, testDF, type = 'class')
+t<- table(predictions= PredictionsWithClass, actual = testDF$low)
+t
+sum(diag(t))/sum(t)
+install.packages("pROC")
+library(pROC)
+PredictionsWithProbs <- predict(modelRandom, testDF, type = 'prob')
+auc <-  auc(testDF$low, PredictionsWithProbs[,2])
+plot(roc(testDF$low, PredictionsWithProbs[,2]))
