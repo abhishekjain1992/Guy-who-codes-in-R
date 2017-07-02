@@ -1,0 +1,80 @@
+install.packages("hflights")
+library(dplyr)
+library(hflights)
+data("hflights") #load the data
+head(hflights)
+flights <- tbl_df(hflights) #wrapper local data frame
+head(flights)
+flights
+print(flights, n=20)
+data.frame(head(flights)) #coercion to the regular data frame
+filter(flights, Month==1, DayofMonth==1)
+filter(flights, UniqueCarrier=="AA" | UniqueCarrier == "UA")
+filter(flights, UniqueCarrier %in% c("AA", "UA")) # you don't have to write again UniqueCarrier
+#select command
+select(flights, Year, Month, DayofMonth)
+select(flights, Year:DayofMonth, contains("Delay"))
+#other fuctions like starts_with, ends_with, matches
+#chaining
+flights %>%
+  select(UniqueCarrier, DepDelay) %>%
+  filter(DepDelay > 60)
+#arrange : Reorder rows
+flights %>%
+  select(UniqueCarrier, DepDelay) %>%
+  arrange(DepDelay) #ascending by default
+#for descending
+flights %>%
+  select(UniqueCarrier, DepDelay) %>%
+  arrange(desc(DepDelay))
+#mutate : create new variables that are the functions of other variable
+flights %>%
+  select(Distance, AirTime) %>%
+  mutate(Speed = Distance/AirTime*60)
+# to store this output
+flights <- flights %>% select(Distance, AirTime) %>% mutate(Speed = Distance/AirTime*60)
+flights <- tbl_df(hflights) #get back to original state
+#summarise: group something by using aggregate function
+flights %>%
+  group_by(Dest) %>%
+  summarise(avg_delay = mean(ArrDelay, na.rm = TRUE))
+#for_each fuction usually used with group_by
+flights %>%
+  group_by(UniqueCarrier) %>%
+  summarise_each(funs(mean), Cancelled, Diverted)
+# a little more complex
+flights %>%
+  group_by(UniqueCarrier) %>%
+  summarise_each(funs(min(., na.rm=TRUE), max(., na.rm=TRUE)), matches("Delay"))
+# n(): count
+flights %>%
+  group_by(DayofMonth, Month) %>%
+  summarise(flight_count = n()) %>%
+  arrange(desc(flight_count))
+flights %>%
+  group_by(Month) %>%
+  summarise(flight_count = n()) %>%
+  arrange(desc(flight_count))
+#tally
+flights %>%
+  group_by(DayofMonth, Month) %>%
+  tally(sort = TRUE)
+#window function
+#lag 
+flights %>%
+  group_by(Month) %>%
+  summarise(flights_count = n()) %>%
+  mutate(new_var = flights_count - lag(flights_count))
+# with tally
+flights %>%
+  group_by(Month) %>%
+  tally() %>%
+  mutate(change = n - lag(n))
+# randomly sample a fixed no of row
+flights %>%
+  sample_n(5)
+#with replace emnt
+flights %>%
+  sample_frac(0.25) 
+#glimpse : shows the structure of the object
+glimpse(flights)
