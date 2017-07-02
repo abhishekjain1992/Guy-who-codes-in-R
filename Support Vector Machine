@@ -1,0 +1,34 @@
+plot(SVM, pch=16)
+model <- lm(Y~X, SVM)
+PredictedY <- predict(model, SVM)
+points(SVM$X, PredictedY, col= "blue", pch=4)
+error<- SVM$Y - PredictedY 
+rmse <- function(error){
+    sqrt(mean(error^2))  
+}
+predictionrmse <- rmse(error)
+predictionrmse
+install.packages("e1071")
+library(e1071)
+new_model <- svm(Y~X, SVM)
+predictedY <- predict(new_model, SVM)
+points(SVM$X, predictedY, col = "red", pch=4)
+error <- SVM$Y - predictedY
+svrPredictionRMSE <- rmse(error)
+
+# perform a grid search
+tuneResult <- tune(svm, Y ~ X,  data = SVM,
+                   ranges = list(epsilon = seq(0,1,0.1), cost = 2^(2:9))
+)
+print(tuneResult)
+# best performance: MSE = 8.371412, RMSE = 2.89 epsilon 1e-04 cost 4
+# Draw the tuning graph
+plot(tuneResult)
+
+
+tuneResult <- tune(svm, Y ~ X,  data = SVM,
+                   ranges = list(epsilon = seq(0,0.2,0.01), cost = 2^(2:9))
+) 
+
+print(tuneResult)
+plot(tuneResult)
